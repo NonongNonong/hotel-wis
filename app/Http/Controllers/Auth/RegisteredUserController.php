@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -30,20 +31,22 @@ class RegisteredUserController extends Controller
             'password'   => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $guest = Guest::create([
-            'fname'      => $request->fname,
-            'lname'      => $request->lname,
-            'email_add'  => $request->email,
-            'mobile_num' => $request->mobile_num,
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            $guest = Guest::create([
+                'fname'      => $request->fname,
+                'lname'      => $request->lname,
+                'email_add'  => $request->email,
+                'mobile_num' => $request->mobile_num ?: null,
+            ]);
 
-        $user = User::create([
-            'name'     => $request->fname . ' ' . $request->lname,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => 'guest',
-            'guest_id' => $guest->id,
-        ]);
+            return User::create([
+                'name'     => $request->fname . ' ' . $request->lname,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'role'     => 'guest',
+                'guest_id' => $guest->id,
+            ]);
+        });
 
         event(new Registered($user));
 
