@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Models\Room;
 use App\Models\ServiceRequest;
 use App\Models\FacilityBooking;
 use App\Models\Service;
@@ -49,6 +50,43 @@ class GuestPortalController extends Controller
                             ->latest()->paginate(10);
 
         return view('guest-portal.reservations', compact('guest', 'reservations'));
+    }
+
+    public function createReservation()
+    {
+        $guest = $this->getGuest();
+        $rooms = Room::where('status', 'Available')->orderBy('room_number')->get();
+
+        return view('guest-portal.create-reservation', compact('guest', 'rooms'));
+    }
+
+    public function storeReservation(Request $request)
+    {
+        $guest = $this->getGuest();
+
+        $request->validate([
+            'room_id'        => ['required', 'exists:rooms,id'],
+            'check_in_date'  => ['required', 'date', 'after_or_equal:today'],
+            'check_out_date' => ['required', 'date', 'after:check_in_date'],
+        ]);
+
+        $room   = Room::findOrFail($request->room_id);
+        $nights = \Carbon\Carbon::parse($request->check_in_date)
+                      ->diffInDays($request->check_out_date);
+        $cost   = $room->base_rate * $nights;
+
+        Reservation::create([
+            'guest_id'       => $guest->id,
+            'room_id'        => $room->id,
+            'check_in_date'  => $request->check_in_date,
+            'check_out_date' => $request->check_out_date,
+            'status'         => 'Pending',
+            'base_room_cost' => $cost,
+            'created_by'     => auth()->user()->name,
+        ]);
+
+        return redirect()->route('guest.reservations')
+                         ->with('success', 'Reservation submitted! We will confirm it shortly.');
     }
 
     public function serviceRequests()

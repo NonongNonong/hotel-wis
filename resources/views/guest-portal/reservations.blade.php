@@ -3,7 +3,12 @@
 
 @section('content')
 
-<h5 class="fw-semibold mb-4">My Reservations</h5>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-semibold mb-0">My Reservations</h5>
+    <a href="{{ route('guest.reservations.create') }}" class="btn btn-brand btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Book a Room
+    </a>
+</div>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">

@@ -85,7 +85,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 // ── Guest portal routes ────────────────────────────────────────────
 Route::middleware(['auth', 'guest-portal'])->prefix('guest-portal')->name('guest.')->group(function () {
     Route::get('/dashboard',         [\App\Http\Controllers\GuestPortalController::class, 'dashboard'])         ->name('dashboard');
-    Route::get('/reservations',      [\App\Http\Controllers\GuestPortalController::class, 'reservations'])      ->name('reservations');
+    Route::get('/reservations',        [\App\Http\Controllers\GuestPortalController::class, 'reservations'])        ->name('reservations');
+    Route::get('/reservations/create', [\App\Http\Controllers\GuestPortalController::class, 'createReservation'])  ->name('reservations.create');
+    Route::post('/reservations',       [\App\Http\Controllers\GuestPortalController::class, 'storeReservation'])   ->name('reservations.store');
     Route::get('/service-requests',  [\App\Http\Controllers\GuestPortalController::class, 'serviceRequests'])   ->name('service-requests');
     Route::post('/service-requests', [\App\Http\Controllers\GuestPortalController::class, 'storeServiceRequest'])->name('service-requests.store');
     Route::get('/facility-bookings', [\App\Http\Controllers\GuestPortalController::class, 'facilityBookings'])  ->name('facility-bookings');

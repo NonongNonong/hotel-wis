@@ -74,6 +74,9 @@
         <a href="{{ route('guest.reservations') }}" class="btn btn-brand btn-sm">
             <i class="bi bi-calendar-check me-1"></i> View Reservations
         </a>
+        <a href="{{ route('guest.reservations.create') }}" class="btn btn-sm" style="background:#d1fae5; color:#065f46;">
+            <i class="bi bi-plus-circle me-1"></i> Book a Room
+        </a>
         <a href="{{ route('guest.service-requests') }}" class="btn btn-sm" style="background:#fef3c7; color:#92400e;">
             <i class="bi bi-clipboard2-plus me-1"></i> Request a Service
         </a>
