@@ -60,8 +60,8 @@
     </div>
 </div>
 
-{{-- Checkouts Table --}}
-<div class="card border-0 shadow-sm">
+{{-- Room Revenue --}}
+<div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-2">
         <small class="fw-semibold text-muted">Room Revenue Breakdown</small>
     </div>
@@ -83,18 +83,13 @@
                     <td>{{ $checkout->id }}</td>
                     <td>{{ $checkout->guest->fname }} {{ $checkout->guest->lname }}</td>
                     <td>Room {{ $checkout->room->room_number }}</td>
-                    <td>
-                        {{ \Carbon\Carbon::parse($checkout->actual_check_out)
-                            ->format('M d, Y h:i A') }}
-                    </td>
+                    <td>{{ \Carbon\Carbon::parse($checkout->actual_check_out)->format('M d, Y h:i A') }}</td>
                     <td>{{ $checkout->payment_method ?? '—' }}</td>
                     <td>₱{{ number_format($checkout->total_amount, 2) }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        No checkout records for this period.
-                    </td>
+                    <td colspan="6" class="text-center text-muted py-4">No checkout records for this period.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -103,6 +98,94 @@
                 <tr>
                     <td colspan="5" class="text-end fw-semibold">Room Total</td>
                     <td class="fw-semibold">₱{{ number_format($roomRevenue, 2) }}</td>
+                </tr>
+            </tfoot>
+            @endif
+        </table>
+    </div>
+</div>
+
+{{-- Service Revenue --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-2">
+        <small class="fw-semibold text-muted">Service Revenue Breakdown</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Guest</th>
+                    <th>Service</th>
+                    <th>Qty</th>
+                    <th>Completed Date</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($serviceRequests as $req)
+                <tr>
+                    <td>{{ $req->id }}</td>
+                    <td>{{ $req->guest->fname }} {{ $req->guest->lname }}</td>
+                    <td>{{ $req->service->name ?? '—' }}</td>
+                    <td>{{ $req->quantity }}</td>
+                    <td>{{ \Carbon\Carbon::parse($req->updated_at)->format('M d, Y h:i A') }}</td>
+                    <td>₱{{ number_format($req->total_cost, 2) }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No completed service requests for this period.</td>
+                </tr>
+                @endforelse
+            </tbody>
+            @if($serviceRequests->count() > 0)
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="5" class="text-end fw-semibold">Service Total</td>
+                    <td class="fw-semibold">₱{{ number_format($serviceRevenue, 2) }}</td>
+                </tr>
+            </tfoot>
+            @endif
+        </table>
+    </div>
+</div>
+
+{{-- Facility Revenue --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-2">
+        <small class="fw-semibold text-muted">Facility Revenue Breakdown</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Guest</th>
+                    <th>Facility</th>
+                    <th>Booking End</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($facilityBookings as $booking)
+                <tr>
+                    <td>{{ $booking->id }}</td>
+                    <td>{{ $booking->guest->fname }} {{ $booking->guest->lname }}</td>
+                    <td>{{ $booking->facility->name ?? '—' }}</td>
+                    <td>{{ \Carbon\Carbon::parse($booking->booking_end)->format('M d, Y h:i A') }}</td>
+                    <td>₱{{ number_format($booking->total_cost, 2) }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No completed facility bookings for this period.</td>
+                </tr>
+                @endforelse
+            </tbody>
+            @if($facilityBookings->count() > 0)
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="4" class="text-end fw-semibold">Facility Total</td>
+                    <td class="fw-semibold">₱{{ number_format($facilityRevenue, 2) }}</td>
                 </tr>
             </tfoot>
             @endif

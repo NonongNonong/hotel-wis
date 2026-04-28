@@ -26,18 +26,30 @@ class RegisteredUserController extends Controller
         $request->validate([
             'fname'      => ['required', 'string', 'max:100'],
             'lname'      => ['required', 'string', 'max:100'],
-            'email'      => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'mobile_num' => ['nullable', 'string', 'max:20'],
+            'email'      => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'mobile_num' => ['nullable', 'string', 'max:20', 'unique:guests,mobile_num'],
             'password'   => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = DB::transaction(function () use ($request) {
-            $guest = Guest::create([
-                'fname'      => $request->fname,
-                'lname'      => $request->lname,
-                'email_add'  => $request->email,
-                'mobile_num' => $request->mobile_num ?: null,
-            ]);
+            // If admin already created a guest record for this email, link to it
+            $guest = Guest::where('email_add', $request->email)->first();
+
+            if ($guest) {
+                // Update name fields if blank
+                $guest->update([
+                    'fname'      => $guest->fname ?: $request->fname,
+                    'lname'      => $guest->lname ?: $request->lname,
+                    'mobile_num' => $guest->mobile_num ?: ($request->mobile_num ?: null),
+                ]);
+            } else {
+                $guest = Guest::create([
+                    'fname'      => $request->fname,
+                    'lname'      => $request->lname,
+                    'email_add'  => $request->email,
+                    'mobile_num' => $request->mobile_num ?: null,
+                ]);
+            }
 
             return User::create([
                 'name'     => $request->fname . ' ' . $request->lname,

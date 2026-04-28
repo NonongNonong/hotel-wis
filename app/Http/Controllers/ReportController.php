@@ -46,19 +46,23 @@ class ReportController extends Controller
             ->whereBetween('actual_check_out', [$from, $to . ' 23:59:59'])
             ->get();
 
-        $facilityRevenue = FacilityBooking::where('status', 'Completed')
-            ->whereBetween('booking_end', [$from, $to . ' 23:59:59'])
-            ->sum('total_cost');
-
-        $serviceRevenue  = ServiceRequest::where('status', 'Completed')
+        $serviceRequests = ServiceRequest::with(['guest', 'service'])
+            ->where('status', 'Completed')
             ->whereBetween('updated_at', [$from, $to . ' 23:59:59'])
-            ->sum('total_cost');
+            ->get();
 
-        $roomRevenue   = $checkouts->sum('total_amount');
-        $totalRevenue  = $roomRevenue + $facilityRevenue + $serviceRevenue;
+        $facilityBookings = FacilityBooking::with(['guest', 'facility'])
+            ->where('status', 'Completed')
+            ->whereBetween('booking_end', [$from, $to . ' 23:59:59'])
+            ->get();
+
+        $roomRevenue     = $checkouts->sum('total_amount');
+        $serviceRevenue  = $serviceRequests->sum('total_cost');
+        $facilityRevenue = $facilityBookings->sum('total_cost');
+        $totalRevenue    = $roomRevenue + $serviceRevenue + $facilityRevenue;
 
         return view('reports.revenue', compact(
-            'checkouts', 'from', 'to',
+            'checkouts', 'serviceRequests', 'facilityBookings', 'from', 'to',
             'roomRevenue', 'facilityRevenue', 'serviceRevenue', 'totalRevenue'
         ));
     }
