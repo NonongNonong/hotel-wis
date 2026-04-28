@@ -81,8 +81,8 @@
                 @forelse($checkouts as $checkout)
                 <tr>
                     <td>{{ $checkout->id }}</td>
-                    <td>{{ $checkout->guest->fname }} {{ $checkout->guest->lname }}</td>
-                    <td>Room {{ $checkout->room->room_number }}</td>
+                    <td>{{ $checkout->guest?->fname }} {{ $checkout->guest?->lname }}</td>
+                    <td>Room {{ $checkout->room?->room_number }}</td>
                     <td>{{ \Carbon\Carbon::parse($checkout->actual_check_out)->format('M d, Y h:i A') }}</td>
                     <td>{{ $checkout->payment_method ?? '—' }}</td>
                     <td>₱{{ number_format($checkout->total_amount, 2) }}</td>
@@ -126,8 +126,8 @@
                 @forelse($serviceRequests as $req)
                 <tr>
                     <td>{{ $req->id }}</td>
-                    <td>{{ $req->guest->fname }} {{ $req->guest->lname }}</td>
-                    <td>{{ $req->service->name ?? '—' }}</td>
+                    <td>{{ $req->guest?->fname }} {{ $req->guest?->lname }}</td>
+                    <td>{{ $req->service?->service_name ?? '—' }}</td>
                     <td>{{ $req->quantity }}</td>
                     <td>{{ \Carbon\Carbon::parse($req->updated_at)->format('M d, Y h:i A') }}</td>
                     <td>₱{{ number_format($req->total_cost, 2) }}</td>
@@ -170,8 +170,8 @@
                 @forelse($facilityBookings as $booking)
                 <tr>
                     <td>{{ $booking->id }}</td>
-                    <td>{{ $booking->guest->fname }} {{ $booking->guest->lname }}</td>
-                    <td>{{ $booking->facility->name ?? '—' }}</td>
+                    <td>{{ $booking->guest?->fname }} {{ $booking->guest?->lname }}</td>
+                    <td>{{ $booking->facility?->facility_name ?? '—' }}</td>
                     <td>{{ \Carbon\Carbon::parse($booking->booking_end)->format('M d, Y h:i A') }}</td>
                     <td>₱{{ number_format($booking->total_cost, 2) }}</td>
                 </tr>
