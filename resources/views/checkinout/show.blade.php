@@ -54,6 +54,137 @@
         </div>
     </div>
 
+    {{-- Service Requests --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                <small class="fw-semibold text-muted">Service Requests</small>
+                <span class="badge bg-secondary">{{ $serviceRequests->count() }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Service</th>
+                            <th>Qty</th>
+                            <th>Cost</th>
+                            <th>Assigned To</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($serviceRequests as $sr)
+                        <tr>
+                            <td>{{ $sr->id }}</td>
+                            <td>{{ $sr->service?->service_name ?? '—' }}</td>
+                            <td>{{ $sr->quantity }}</td>
+                            <td>₱{{ number_format($sr->total_cost, 2) }}</td>
+                            <td>{{ $sr->employee?->fname ?? '—' }}</td>
+                            <td>
+                                @php $badge = match($sr->status) {
+                                    'Completed'   => 'bg-success',
+                                    'Pending'     => 'bg-warning text-dark',
+                                    'Assigned'    => 'bg-info text-dark',
+                                    'In Progress' => 'bg-primary',
+                                    'Cancelled'   => 'bg-danger',
+                                    default       => 'bg-secondary',
+                                }; @endphp
+                                <span class="badge {{ $badge }}">{{ $sr->status }}</span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No service requests.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if($serviceRequests->count() > 0)
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-semibold">Service Total</td>
+                            <td class="fw-semibold">₱{{ number_format($serviceRequests->sum('total_cost'), 2) }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Facility Bookings --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                <small class="fw-semibold text-muted">Facility Bookings</small>
+                <span class="badge bg-secondary">{{ $facilityBookings->count() }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Facility</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($facilityBookings as $fb)
+                        <tr>
+                            <td>{{ $fb->id }}</td>
+                            <td>{{ $fb->facility?->facility_name ?? '—' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($fb->booking_start)->format('M d, Y h:i A') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($fb->booking_end)->format('M d, Y h:i A') }}</td>
+                            <td>{{ $fb->total_cost > 0 ? '₱'.number_format($fb->total_cost, 2) : 'Free' }}</td>
+                            <td>
+                                @php $badge = match($fb->status) {
+                                    'Completed' => 'bg-success',
+                                    'Confirmed' => 'bg-primary',
+                                    'Pending'   => 'bg-warning text-dark',
+                                    'Cancelled' => 'bg-danger',
+                                    default     => 'bg-secondary',
+                                }; @endphp
+                                <span class="badge {{ $badge }}">{{ $fb->status }}</span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No facility bookings.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if($facilityBookings->where('total_cost', '>', 0)->count() > 0)
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-semibold">Facility Total</td>
+                            <td class="fw-semibold">₱{{ number_format($facilityBookings->sum('total_cost'), 2) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Grand Total --}}
+    @if($checkinout->status === 'Checked-out')
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" style="border-left: 3px solid #0f6e56 !important;">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Grand Total (Room + Services + Facilities)</span>
+                <span class="fw-bold fs-5" style="color:#0f6e56;">
+                    ₱{{ number_format($checkinout->total_amount + $serviceRequests->sum('total_cost') + $facilityBookings->sum('total_cost'), 2) }}
+                </span>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body">

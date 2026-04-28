@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CheckInOut;
+use App\Models\FacilityBooking;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 
 class CheckInOutController extends Controller
@@ -74,7 +76,16 @@ class CheckInOutController extends Controller
     public function show(CheckInOut $checkinout)
     {
         $checkinout->load(['guest', 'room', 'reservation']);
-        return view('checkinout.show', compact('checkinout'));
+
+        $serviceRequests = ServiceRequest::with(['service', 'employee'])
+            ->where('reservation_id', $checkinout->reservation_id)
+            ->get();
+
+        $facilityBookings = FacilityBooking::with(['facility'])
+            ->where('reservation_id', $checkinout->reservation_id)
+            ->get();
+
+        return view('checkinout.show', compact('checkinout', 'serviceRequests', 'facilityBookings'));
     }
 
     public function checkout(Request $request, CheckInOut $checkinout)
@@ -104,6 +115,21 @@ class CheckInOutController extends Controller
         // Update reservation and room status
         $checkinout->reservation->update(['status' => 'Completed']);
         Room::findOrFail($checkinout->room_id)->update(['status' => 'Available']);
+
+        // Auto-complete open service requests and facility bookings for this reservation
+        ServiceRequest::where('reservation_id', $checkinout->reservation_id)
+            ->whereNotIn('status', ['Completed', 'Cancelled'])
+            ->update([
+                'status'         => 'Completed',
+                'last_update_by' => auth()->user()->name,
+            ]);
+
+        FacilityBooking::where('reservation_id', $checkinout->reservation_id)
+            ->whereNotIn('status', ['Completed', 'Cancelled'])
+            ->update([
+                'status'         => 'Completed',
+                'last_update_by' => auth()->user()->name,
+            ]);
 
         return redirect()->route('checkinout.index')
                          ->with('success', 'Guest checked out successfully.');
