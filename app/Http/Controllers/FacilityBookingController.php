@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FacilityBooking;
 use App\Models\Facility;
+use App\Models\Guest;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 
@@ -38,7 +39,8 @@ class FacilityBookingController extends Controller
         $reservations = Reservation::with(['guest', 'room'])
                                    ->whereIn('status', ['Confirmed', 'Checked-in'])
                                    ->get();
-        return view('facilitybookings.create', compact('facilities', 'reservations'));
+        $guests = Guest::orderBy('lname')->get();
+        return view('facilitybookings.create', compact('facilities', 'reservations', 'guests'));
     }
 
     public function store(Request $request)
@@ -46,6 +48,7 @@ class FacilityBookingController extends Controller
         $request->validate([
             'facility_id'    => 'required|exists:facilities,id',
             'reservation_id' => 'nullable|exists:reservations,id',
+            'guest_id'       => 'required_without:reservation_id|nullable|exists:guests,id',
             'booking_start'  => 'required|date',
             'booking_end'    => 'required|date|after:booking_start',
             'status'         => 'required|string',
@@ -59,11 +62,12 @@ class FacilityBookingController extends Controller
         $hours     = max(1, $start->diffInHours($end));
         $totalCost = $facility->need_payment ? $facility->price * $hours : 0;
 
-        // Get guest from reservation if provided
+        // Derive guest_id from reservation, or fall back to direct guest selection
         $guestId = null;
         if ($request->reservation_id) {
-            $reservation = Reservation::findOrFail($request->reservation_id);
-            $guestId     = $reservation->guest_id;
+            $guestId = Reservation::findOrFail($request->reservation_id)->guest_id;
+        } elseif ($request->guest_id) {
+            $guestId = $request->guest_id;
         }
 
         // Check for overlapping bookings on same facility

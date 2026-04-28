@@ -38,9 +38,10 @@
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">Link to Reservation (optional)</label>
-                    <select name="reservation_id"
-                            class="form-select @error('reservation_id') is-invalid @enderror">
+                    <label class="form-label">Link to Reservation <small class="text-muted">(sets guest automatically)</small></label>
+                    <select name="reservation_id" id="reservation_id"
+                            class="form-select @error('reservation_id') is-invalid @enderror"
+                            onchange="toggleGuestField()">
                         <option value="">-- No Reservation --</option>
                         @foreach($reservations as $reservation)
                             <option value="{{ $reservation->id }}"
@@ -53,6 +54,21 @@
                         @endforeach
                     </select>
                     @error('reservation_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-12" id="guestField" {{ old('reservation_id') ? 'style=display:none' : '' }}>
+                    <label class="form-label">Guest <span class="text-danger">*</span> <small class="text-muted">(required when no reservation selected)</small></label>
+                    <select name="guest_id" class="form-select @error('guest_id') is-invalid @enderror">
+                        <option value="">-- Select Guest --</option>
+                        @foreach($guests as $guest)
+                            <option value="{{ $guest->id }}" {{ old('guest_id') == $guest->id ? 'selected' : '' }}>
+                                {{ $guest->lname }}, {{ $guest->fname }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('guest_id')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
@@ -103,5 +119,12 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleGuestField() {
+    const hasReservation = document.getElementById('reservation_id').value;
+    document.getElementById('guestField').style.display = hasReservation ? 'none' : '';
+}
+</script>
 
 @endsection
