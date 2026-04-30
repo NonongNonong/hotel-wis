@@ -177,6 +177,18 @@ class GuestPortalController extends Controller
         $hours     = max(1, $start->diffInHours($end));
         $totalCost = $facility->need_payment ? $facility->price * $hours : 0;
 
+        // Prevent double-booking: existing.start < new.end AND existing.end > new.start
+        $overlap = FacilityBooking::where('facility_id', $request->facility_id)
+            ->whereIn('status', ['Pending', 'Confirmed'])
+            ->where('booking_start', '<', $request->booking_end)
+            ->where('booking_end',   '>',  $request->booking_start)
+            ->exists();
+
+        if ($overlap) {
+            return back()->withInput()
+                         ->with('error', 'This facility is already booked for the selected time slot. Please choose a different time.');
+        }
+
         $activeReservation = Reservation::where('guest_id', $guest->id)
                                 ->whereIn('status', ['Confirmed', 'Checked-in'])
                                 ->first();

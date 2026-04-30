@@ -70,17 +70,16 @@ class FacilityBookingController extends Controller
             $guestId = $request->guest_id;
         }
 
-        // Check for overlapping bookings on same facility
+        // Check for overlapping bookings: existing.start < new.end AND existing.end > new.start
         $overlap = FacilityBooking::where('facility_id', $request->facility_id)
-            ->whereIn('status', ['Pending', 'Confirmed', 'Checked-in'])
-            ->where(function($q) use ($request) {
-                $q->whereBetween('booking_start', [$request->booking_start, $request->booking_end])
-                  ->orWhereBetween('booking_end',  [$request->booking_start, $request->booking_end]);
-            })->exists();
+            ->whereIn('status', ['Pending', 'Confirmed'])
+            ->where('booking_start', '<', $request->booking_end)
+            ->where('booking_end',   '>',  $request->booking_start)
+            ->exists();
 
         if ($overlap) {
             return back()->withInput()
-                         ->with('error', 'This facility is already booked for the selected time.');
+                         ->with('error', 'This facility is already booked for the selected time slot.');
         }
 
         FacilityBooking::create([
